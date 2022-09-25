@@ -58,10 +58,10 @@ backend = "test"
 dir = "/berachain/.berad"
 
 [rpc]
-grpc_endpoint = "node:26653"
+grpc_endpoint = "bera-node:26653"
 grpc_startup_timeout = "30000ms"
 rpc_timeout = "100ms"
-tmrpc_endpoint = "http://node:26657"
+tmrpc_endpoint = "http://bera-node:26657"
 
 [telemetry]
 enable_hostname = true
