@@ -32,6 +32,8 @@ mytestnet
 data/*.db
 data/*.wal
 data/snapshots/
+data/ipfs
+data/postgres
 config/addrbook.json 
 
 # Testing

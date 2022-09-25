@@ -2,14 +2,14 @@ version: "3"
 
 services:
   # The Validator Node
-  node:
+  bera-node:
     env_file:
       - .env
     image: ghcr.io/berachain/berachain-node:${VERSION}
     user: ":"
     volumes:
       - ./:/berachain/.berad
-    command: ["start", "--pruning=nothing", "--evm.tracer=json", "--trace"]
+    command: ["start", "--pruning=nothing"]
     ports:
       - "26660:26660"
       - "26653:26653"
@@ -18,11 +18,14 @@ services:
       - "1317:1317"
       - "8545:8545"
       - "8546:8546"
+    networks:
+      berachain-network:
+        ipv4_address: 10.5.0.11
 
   # The Oracle Feeder Process
-  oracle:
+  bera-oracle:
     depends_on:
-      - node
+      - bera-node
     env_file:
       - .env
     image: ghcr.io/berachain/berachain-node:${VERSION}
@@ -34,7 +37,67 @@ services:
     command: ["oracle-feeder", "/berachain/.berad/oracle/config.toml"]
     ports:
       - "7171:7171"
+    networks:
+      berachain-network:
+        ipv4_address: 10.5.0.12
+
+  graph-node:
+    image: graphprotocol/graph-node
+    depends_on:
+      - bera-node
+      - bera-oracle
+      - graph-ipfs
+      - graph-postgres
+    environment:
+      postgres_host: graph-postgres
+      postgres_user: graph-node
+      postgres_pass: let-me-in
+      postgres_db: graph-node
+      ipfs: 'graph-ipfs:5001'
+      ethereum: bera:http://10.5.0.1:8545
+      GRAPH_LOG: info
+    ports:
+      - '8000:8000'
+      - '8001:8001'
+      - '8020:8020'
+      - '8030:8030'
+      - '8040:8040'
+    networks:
+      berachain-network:
+        ipv4_address: 10.5.0.21
+  graph-ipfs:
+    image: ipfs/go-ipfs:v0.10.0
+    volumes:
+      - ./data/ipfs:/data/ipfs
+    ports:
+      - '5001:5001'
+    networks:
+      berachain-network:
+        ipv4_address: 10.5.0.32
+  graph-postgres:
+    image: postgres
+    command:
+      [
+        "postgres",
+        "-cshared_preload_libraries=pg_stat_statements"
+      ]
+    environment:
+      POSTGRES_USER: graph-node
+      POSTGRES_PASSWORD: let-me-in
+      POSTGRES_DB: graph-node
+      PGDATA: "/data/postgres"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    networks:
+      berachain-network:
+        ipv4_address: 10.5.0.33
 
 networks:
-  default:
-    name: berachain-network
+  berachain-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1
