@@ -1,0 +1,3 @@
+[submodule "modules/graph-node"]
+	path = modules/graph-node
+	url = https://github.com/BeraLabs/graph-node.git
