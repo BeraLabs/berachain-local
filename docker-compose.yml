@@ -9,7 +9,7 @@ services:
     user: ":"
     volumes:
       - ./:/berachain/.berad
-    command: ["start"]
+    command: ["start", "--pruning=nothing", "--evm.tracer=json", "--trace"]
     ports:
       - "26660:26660"
       - "26653:26653"
